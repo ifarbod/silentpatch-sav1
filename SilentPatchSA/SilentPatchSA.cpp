@@ -3578,6 +3578,16 @@ namespace SpeechSystemFixes
 
 	static uint32_t* ConversationTopic;
 
+	static bool (__thiscall* orgPedIsReadyForConversation)(CPed* ped, bool bCheckWantedLevel);
+	static bool __fastcall PedIsReadyForConversation_CheckAlive(CPed* ped, void*, bool bCheckWantedLevel)
+	{
+		if (!ped->IsAlive() || ped->fHealth <= 0.1f)
+		{
+			return false;
+		}
+		return orgPedIsReadyForConversation(ped, bCheckWantedLevel);
+	}
+
 	static void* (__thiscall* orgPedSay_Weather)(void* ped, uint16_t Phrase, void* StartTimeDelay, void* Probability, void* bOverideSilence, void* bForceAudible, void* bFrontEnd);
 	static void* __fastcall PedSay_NegativeWeatherOverride(void* ped, void*, uint16_t Phrase, void* StartTimeDelay, void* Probability, void* bOverideSilence, void* bForceAudible, void* bFrontEnd)
 	{
@@ -7195,6 +7205,9 @@ void Patch_SA_10(HINSTANCE hInstance)
 
 		// Play DRUGGED_IGNORE on the homie, not on CJ, when they're refusing to be recruited
 		InterceptCall(0x60C87A, orgPedSay_MakeThisPedJoinOurGroup_DruggedIgnore, PedSay_MakeThisPedJoinOurGroup_DruggedIgnore);
+
+		// Don't let dead and dying peds start conversations with CJ
+		InterceptCall(0x43B213, orgPedIsReadyForConversation, PedIsReadyForConversation_CheckAlive);
 	}
 
 
