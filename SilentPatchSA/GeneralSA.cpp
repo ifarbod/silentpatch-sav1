@@ -15,6 +15,8 @@ ExternalMethod<CShadowCamera, void ()> CShadowCamera::InvertRaster(AddressByVers
 
 ExternalFunc<CWeaponInfo* (eWeaponType weaponID, signed char bType)> CWeaponInfo::GetWeaponInfo(AddressByVersion<CWeaponInfo*(*)(eWeaponType, signed char)>(0x743C60));
 
+ExternalFunc<void (CEntity* pEntity)> CWorld::RemoveFunc(AddressByVersion<void(*)(CEntity*)>(0x563280));
+
 static ExternalFunc SetEditableMaterialsCB(AddressByVersion<RpAtomic*(*)(RpAtomic*,void*)>(0x4C83E0));
 
 bool HasGameBindings_DetachedPartRenderingFix()

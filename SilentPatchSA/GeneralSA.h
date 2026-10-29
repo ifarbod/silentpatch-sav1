@@ -332,6 +332,14 @@ public:
 	static std::tuple<int,int>	TryOrFreeUpTempObjects( int numObjects, bool force );
 };
 
+class CWorld
+{
+public:
+	static ExternalFunc<void (CEntity* pEntity)> RemoveFunc;
+	static void		Remove( CEntity* pEntity )
+						{ RemoveFunc.Call( pEntity ); }
+};
+
 class CZoneInfo
 {
 public:
