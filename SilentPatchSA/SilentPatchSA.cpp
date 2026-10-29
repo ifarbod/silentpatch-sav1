@@ -1451,7 +1451,22 @@ namespace DirectionalFromSun
 	static void (*orgSetLightsWithTimeOfDayColour)( RpWorld* );
 	static void SetLightsWithTimeOfDayColour_SilentPatch( RpWorld* world )
 	{
-		curVecToSun = bUseAaronSun ? VectorToSun.Get()[CurrentStoredValue.Get()] : vecDirnLightToSun.Get();
+		curVecToSun = vecDirnLightToSun.Get();
+		if ( bUseAaronSun )
+		{
+			curVecToSun = VectorToSun.Get()[CurrentStoredValue.Get()];
+
+			// The sun is below the horizon at night, so using its direction would light the world, and
+			// vehicles in particular, from underneath. Fade it into the fixed light direction as it
+			// gets close to the horizon, and back as it rises.
+			const float fSunHeight = curVecToSun.z;
+			const float fSunDirectionMult = std::clamp( (fSunHeight + 0.1f) * 5.0f, 0.0f, 1.0f );
+			if ( fSunDirectionMult < 1.0f )
+			{
+				curVecToSun = curVecToSun * fSunDirectionMult + vecDirnLightToSun.Get() * ( 1.0f - fSunDirectionMult );
+				curVecToSun.Normalize();
+			}
+		}
 		orgSetLightsWithTimeOfDayColour( world );
 	}
 }
@@ -3454,7 +3469,7 @@ namespace CoronaFlaresScaling
 
 	template<std::size_t Index>
 	static void (*orgRenderBufferedOneXLUSprite2D)(void* x, void* y, float width, float height, void* rgb, void* intens, void* a);
-	
+
 	template<std::size_t Index>
 	static void RenderBufferedOneXLUSprite2D_Scale(void* x, void* y, float width, float height, void* rgb, void* intens, void* a)
 	{
@@ -6535,7 +6550,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 	}
 
 
-	// Fix paintjobs vanishing after opening/closing garage without rendering the car 
+	// Fix paintjobs vanishing after opening/closing garage without rendering the car
 	if (ms_modelInfoPtrs.Ensure())
 	{
 		InjectHook( 0x6D0B70, &CVehicle::GetRemapIndex, HookType::Jump );
