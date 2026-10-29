@@ -2693,6 +2693,44 @@ namespace RemoveDriverStatusFix
 }
 
 
+// ============= Fixed script attractors on objects never starting their script brain =============
+// https://github.com/CookiePLMonster/SilentPatch/issues/384
+namespace ObjectTriggerScriptAttractors
+{
+	static void* StartScriptBrain;	// brain starts and the ped gets CTaskComplexUseScriptedBrain
+	static void* NoScriptBrain;		// no brain starts, so the ped leaves without a subtask
+
+	// replaces the check with:
+	//   if ( !pEntity->GetIsTypeObject()
+	//     || static_cast<CObject*>(pEntity)->m_nObjectFlags.bEnableDisabledAttractors
+	//     || (m_pAttractor->GetEffect()->attr.q.m_flags & PEDQUEUEATTR_DISABLED) == 0 )
+	__declspec(naked) static void CheckIfScriptBrainCanStart()
+	{
+		_asm
+		{
+			mov		eax, [ebp+0xC]					// m_pAttractor
+			mov		eax, [eax+0x8]					// m_pAttractor->m_pEntity
+			mov		dl, [eax+0x36]
+			and		dl, 7
+			cmp		dl, 4							// ENTITY_TYPE_OBJECT
+			jne		StartBrain
+			test	byte ptr [eax+0x143], 1			// m_nObjectFlags.bEnableDisabledAttractors
+			jnz		StartBrain
+			mov		eax, [ebp+0xC]
+			mov		eax, [eax+0x4]					// m_pAttractor->m_pEffect
+			test	eax, eax
+			jz		StartBrain
+			test	byte ptr [eax+0x37], 1			// attr.q.m_flags & PEDQUEUEATTR_DISABLED
+			jz		StartBrain
+			jmp		NoScriptBrain
+
+		StartBrain:
+			jmp		StartScriptBrain
+		}
+	}
+}
+
+
 // ============= Fixed shooting stars rendering black =============
 namespace ShootingStarsFix
 {
@@ -6822,6 +6860,20 @@ void Patch_SA_10(HINSTANCE hInstance)
 		// CVehicle::RemoveDriver already sets the status to STATUS_ABANDONED, these are redundant
 		Nop(0x48628D, 3);
 		Nop(0x647E21, 3);
+	}
+
+
+	// Script attractors on objects now start their script brain, unless the attractor is marked as disabled
+	// and the object does not opt in with ENABLE_DISABLED_ATTACTORS_ON_OBJECT
+	{
+		using namespace ObjectTriggerScriptAttractors;
+
+		StartScriptBrain = (void*)0x63879D;
+		NoScriptBrain = (void*)0x638884;
+
+		// Replaces the object type/flag check, 0x638789 to 0x63879D
+		InjectHook(0x638789, CheckIfScriptBrainCanStart, HookType::Jump);
+		Nop(0x638789 + 5, 0x63879D - (0x638789 + 5));
 	}
 
 

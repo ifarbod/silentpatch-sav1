@@ -207,6 +207,7 @@ All the remaining, non-critical fixes.
 * ⚙️ Helicopter rotors and plane propellers now work correctly. They now have a blurring effect present in Vice City and the PS2 version of San Andreas. - [VehicleSA.cpp:424](https://github.com/ifarbod/silentpatch-sav1/blob/master/SilentPatchSA/VehicleSA.cpp#L424)
 * ⚙️ Dual rear wheels now show up properly (Yosemite, Tanker, etc.). - [SilentPatchSA.cpp:5272](https://github.com/ifarbod/silentpatch-sav1/blob/master/SilentPatchSA/SilentPatchSA.cpp#L5272)
 * ⚙️ Quadruple Stunt Bonus now works correctly. - [SilentPatchSA.cpp:958](https://github.com/ifarbod/silentpatch-sav1/blob/master/SilentPatchSA/SilentPatchSA.cpp#L958)
+* Pedestrians no longer get stuck at script attractors placed on objects, such as the casino slot machines - their script brain (PEDSLOT) never started. - [SilentPatchSA.cpp:6872](https://github.com/ifarbod/silentpatch-sav1/blob/master/SilentPatchSA/SilentPatchSA.cpp#L6872)
 
 ## Enhancements
 Any changes that don't strictly fix game bugs.
